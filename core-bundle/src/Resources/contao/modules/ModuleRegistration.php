@@ -243,7 +243,7 @@ class ModuleRegistration extends Module
 				}
 
 				// Convert arrays (see #4980)
-				if (($arrData['eval']['multiple'] ?? null) && isset($arrData['eval']['csv']))
+				if (($arrData['eval']['multiple'] ?? null) && isset($arrData['eval']['csv']) && \is_array($varValue))
 				{
 					$varValue = implode($arrData['eval']['csv'], $varValue);
 				}
@@ -350,7 +350,7 @@ class ModuleRegistration extends Module
 		$this->Template->addressDetails = $GLOBALS['TL_LANG']['tl_member']['addressDetails'];
 		$this->Template->contactDetails = $GLOBALS['TL_LANG']['tl_member']['contactDetails'];
 		$this->Template->personalData = $GLOBALS['TL_LANG']['tl_member']['personalData'];
-		$this->Template->captchaDetails = $GLOBALS['TL_LANG']['MSC']['securityQuestion'];
+		$this->Template->captchaDetails = $GLOBALS['TL_LANG']['tl_member']['captchaDetails'];
 
 		// Add the groups
 		foreach ($arrFields as $k=>$v)

@@ -311,6 +311,7 @@
       </trans-unit>
       <trans-unit id="tl_content.data.1">
         <source>These values are available as &lt;code&gt;$this-&gt;keys&lt;/code&gt; in the template.</source>
+        <target>Bu veriler kalıpta &lt;code&gt;$this-&gt;keys&lt;/code&gt; şeklinde kullanılabilir.</target>
       </trans-unit>
       <trans-unit id="tl_content.linkTitle.0">
         <source>Link text</source>
@@ -770,11 +771,11 @@
       </trans-unit>
       <trans-unit id="tl_content.includeTemplate">
         <source>The &lt;em&gt;%s&lt;/em&gt; template needs to be included in the page layout.</source>
-        <target>&lt;em&gt;%s&lt;/em&gt; kalıbının sayfa düzenine katılması gereklidir.</target>
+        <target>&lt;em&gt;%s&lt;/em&gt; kalıbının sayfa yerleşimine katılması gereklidir.</target>
       </trans-unit>
       <trans-unit id="tl_content.includeTemplates">
         <source>The &lt;em&gt;%s&lt;/em&gt; or &lt;em&gt;%s&lt;/em&gt; template needs to be included in the page layout.</source>
-        <target>&lt;em&gt;%s&lt;/em&gt; ya da &lt;em&gt;%s&lt;/em&gt; kalıbının sayfa düzenine katılması gereklidir.</target>
+        <target>&lt;em&gt;%s&lt;/em&gt; ya da &lt;em&gt;%s&lt;/em&gt; kalıbının sayfa yerleşimine katılması gereklidir.</target>
       </trans-unit>
       <trans-unit id="tl_content.player_autoplay">
         <source>Autoplay</source>

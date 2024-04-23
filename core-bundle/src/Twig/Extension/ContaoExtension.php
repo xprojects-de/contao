@@ -16,11 +16,11 @@ use Contao\BackendTemplateTrait;
 use Contao\CoreBundle\InsertTag\ChunkedText;
 use Contao\CoreBundle\Twig\Inheritance\DynamicExtendsTokenParser;
 use Contao\CoreBundle\Twig\Inheritance\DynamicIncludeTokenParser;
-use Contao\CoreBundle\Twig\Inheritance\TemplateHierarchyInterface;
 use Contao\CoreBundle\Twig\Interop\ContaoEscaper;
 use Contao\CoreBundle\Twig\Interop\ContaoEscaperNodeVisitor;
 use Contao\CoreBundle\Twig\Interop\PhpTemplateProxyNode;
 use Contao\CoreBundle\Twig\Interop\PhpTemplateProxyNodeVisitor;
+use Contao\CoreBundle\Twig\Loader\ContaoFilesystemLoader;
 use Contao\CoreBundle\Twig\Runtime\FigureRendererRuntime;
 use Contao\CoreBundle\Twig\Runtime\InsertTagRuntime;
 use Contao\CoreBundle\Twig\Runtime\LegacyTemplateFunctionsRuntime;
@@ -44,13 +44,13 @@ use Twig\TwigFunction;
 final class ContaoExtension extends AbstractExtension
 {
     private Environment $environment;
-    private TemplateHierarchyInterface $hierarchy;
+    private ContaoFilesystemLoader $filesystemLoader;
     private array $contaoEscaperFilterRules = [];
 
-    public function __construct(Environment $environment, TemplateHierarchyInterface $hierarchy)
+    public function __construct(Environment $environment, ContaoFilesystemLoader $filesystemLoader)
     {
         $this->environment = $environment;
-        $this->hierarchy = $hierarchy;
+        $this->filesystemLoader = $filesystemLoader;
 
         $contaoEscaper = new ContaoEscaper();
 
@@ -104,8 +104,8 @@ final class ContaoExtension extends AbstractExtension
         return [
             // Overwrite the parsers for the "extends" and "include" tags to
             // additionally support the Contao template hierarchy
-            new DynamicExtendsTokenParser($this->hierarchy),
-            new DynamicIncludeTokenParser($this->hierarchy),
+            new DynamicExtendsTokenParser($this->filesystemLoader),
+            new DynamicIncludeTokenParser($this->filesystemLoader),
         ];
     }
 
@@ -120,7 +120,7 @@ final class ContaoExtension extends AbstractExtension
                 'include',
                 function (Environment $env, $context, $template, $variables = [], $withContext = true, $ignoreMissing = false, $sandboxed = false /* we need named arguments here */) use ($includeFunctionCallable) {
                     $args = \func_get_args();
-                    $args[2] = DynamicIncludeTokenParser::adjustTemplateName($template, $this->hierarchy);
+                    $args[2] = DynamicIncludeTokenParser::adjustTemplateName($template, $this->filesystemLoader);
 
                     return $includeFunctionCallable(...$args);
                 },
@@ -168,12 +168,24 @@ final class ContaoExtension extends AbstractExtension
                 $parts = [];
 
                 foreach ($string as [$type, $chunk]) {
-                    $parts[] = ChunkedText::TYPE_RAW === $type
-                        ? $chunk
-                        : twig_escape_filter($env, $chunk, $strategy, $charset);
+                    if (ChunkedText::TYPE_RAW === $type) {
+                        $parts[] = $chunk;
+                    } else {
+                        // Forward compatibility with twig/twig 4
+                        if (method_exists(EscaperExtension::class, 'escape')) {
+                            $parts[] = EscaperExtension::escape($env, $chunk, $strategy, $charset);
+                        } else {
+                            $parts[] = twig_escape_filter($env, $chunk, $strategy, $charset);
+                        }
+                    }
                 }
 
                 return implode('', $parts);
+            }
+
+            // Forward compatibility with twig/twig 4
+            if (method_exists(EscaperExtension::class, 'escape')) {
+                return EscaperExtension::escape($env, $string, $strategy, $charset, $autoescape);
             }
 
             return twig_escape_filter($env, $string, $strategy, $charset, $autoescape);
@@ -190,7 +202,12 @@ final class ContaoExtension extends AbstractExtension
                 return [$value, substr($value, 7)];
             }
 
-            return twig_escape_filter_is_safe($filterArgs);
+            // Backwards compatibility with twig/twig <3.9
+            if (\function_exists('twig_escape_filter_is_safe')) {
+                return twig_escape_filter_is_safe($filterArgs);
+            }
+
+            return EscaperExtension::escapeFilterIsSafe($filterArgs);
         };
 
         return [
